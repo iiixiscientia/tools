@@ -1,7 +1,7 @@
 '''
 @Author: zjk
 @Date: 2020-04-26 11:55:39
-@LastEditTime: 2020-04-26 20:59:03
+@LastEditTime: 2020-04-27 09:32:01
 @LastEditors: zjk
 @Description: 抽取主诉、病史、病案号等
 '''
@@ -66,5 +66,29 @@ def extract_text(file):
             text.append(chief_clean)
     else:
         text.append('Null')
+    
+
+    # 现病史（re方法）
+    phpi = r'<P><FONT color=steelblue>.*?现病史.*?</P>'
+    hpi = regex.search(phpi, myhtml)
+    if hpi:
+        # remove_tag = r'<[^>]+>'
+        # hpi_no_tag = regex.sub(remove_tag,'', hpi[0])
+        # if hpi_no_tag:
+        #     hpi_no_title_tag = regex.sub(r'主诉','',hpi_no_tag[0])
+        #     if hpi_no_title_tag:
+        #         text.append(hpi_no_title_tag[0])
+        from pyquery import PyQuery
+        hpi_text = PyQuery(hpi[0])
+        if hpi_text.text():
+            # clean the hpi compliant text
+            p1 = r'\n|:|：'
+            hpi_clean = regex.sub(p1,'',str(hpi_text.text()))
+            hpi_cut = regex.sub('.*?(?=现病史)','',hpi_clean)
+            hpi_end = regex.sub('现病史','',hpi_cut)
+            text.append(hpi_end)
+    else:
+        text.append('Null')
+
         
     return text
