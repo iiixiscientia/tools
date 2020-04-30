@@ -9,6 +9,7 @@ import regex
 # import pandas as pd
 # import numpy as np
 from lxml import etree
+from pyquery import PyQuery
 
 
 def extract_text(file):
@@ -26,13 +27,13 @@ def extract_text(file):
     # print(result)
 
     # 病案号
-    his_record_number = r'<病案号.*?>.*?</病案号>'
+    his_record_number = r'<病案号.*?>.*?</病案号>'  ## .*?贪婪匹配，匹配到>
     his_record_number_temp = regex.findall(his_record_number, myhtml)
     if his_record_number_temp:
         modified_number = r'\d{6}(?=</病案号>)'
         text.append(regex.findall(modified_number, his_record_number_temp[0])[0])
     else:
-        text.append('Null')
+        text.append('null')
 
 
     # HIS内部标识
@@ -43,105 +44,89 @@ def extract_text(file):
         # print("病案号：", regex.findall(modified_number, medical_record_number_temp[0]))
         text.append(regex.findall(modified_number, medical_record_number_temp[0])[0])
     else:
-        # print("病案号：", "Null")
-        text.append('Null')
+        # print("病案号：", "*")
+        text.append('null')
 
-    # # 主诉（re方法）
-    # # chief_compliant = r'(?<=<STRONG>主诉.*?</STRONG>).*?(?=</FONT>)|(?<=<STRONG>主诉：</STRONG>).*?(?=</FONT>)'
-    # chief_compliant = r'<P><FONT color=steelblue>.*?主诉.*?</P>'
-    # chief = regex.search(chief_compliant, myhtml)
-    # if chief:
-    #     # remove_tag = r'<[^>]+>'
-    #     # chief_no_tag = regex.sub(remove_tag,'', chief[0])
-    #     # if chief_no_tag:
-    #     #     chief_no_title_tag = regex.sub(r'主诉','',chief_no_tag[0])
-    #     #     if chief_no_title_tag:
-    #     #         text.append(chief_no_title_tag[0])
-    #     from pyquery import PyQuery
-    #     chief_text = PyQuery(chief[0])
-    #     if chief_text.text():
-    #         # clean the chief compliant text
-    #         p1 = r'主诉|\n|:|：'
-    #         chief_clean = regex.sub(p1,'',str(chief_text.text()))
-    #         text.append(chief_clean)
-    # else:
-    #     text.append('Null')
+    try:
+        # 不匹配xml
+        htmlexecxml = r'</XML><XML id="1">.*?家族史.*?</P>'
+        wushi = regex.search(htmlexecxml, myhtml)
+        #print(wushi)
 
+        chiefandhistory = PyQuery(wushi[0])
 
-    # # 现病史（re方法）
-    # phpi = r'<P><FONT color=steelblue>.*?现病史.*?</P>'
-    # hpi = regex.search(phpi, myhtml)
-    # if hpi:
-    #     # remove_tag = r'<[^>]+>'
-    #     # hpi_no_tag = regex.sub(remove_tag,'', hpi[0])
-    #     # if hpi_no_tag:
-    #     #     hpi_no_title_tag = regex.sub(r'主诉','',hpi_no_tag[0])
-    #     #     if hpi_no_title_tag:
-    #     #         text.append(hpi_no_title_tag[0])
-    #     from pyquery import PyQuery
-    #     hpi_text = PyQuery(hpi[0])
-    #     if hpi_text.text():
-    #         # clean the hpi compliant text
-    #         p1 = r'\n|:|：'
-    #         hpi_clean = regex.sub(p1,'',str(hpi_text.text()))
-    #         hpi_cut = regex.sub('.*?(?=现病史)','',hpi_clean)
-    #         hpi_end = regex.sub('现病史','',hpi_cut)
-    #         text.append(hpi_end)
-    # else:
-    #     text.append('Null')
-    
+        # print(wushi)
+        #
+        # # 从主诉一直拉取到月经及婚育史（re方法）
+        # wushizz = r'主诉.*?(?=((情况属实 患方签字)|(患方签字)|(患者签字)))'
+        # chiefandhistory = regex.findall(wushizz, wushi)
 
-    # 从主诉一直拉取到月经及婚育史（re方法）
-    chiefandhistory = r'<P><FONT color=steelblue>.*?婚育史.*?</P>'
-    chiefandhistory = regex.search(chiefandhistory, myhtml)
-    if chiefandhistory:
-        from pyquery import PyQuery
-        chiefandhistory_text = PyQuery(chiefandhistory[0])
-        if chiefandhistory_text.text():
-            # clean the chief and history compliant text, get rid of \n,:,：
-            p1 = r'\n|:|：'
-            chiefandhistory_clean = regex.sub(p1,'',str(chiefandhistory_text.text()))
-            if chiefandhistory_clean:
+        if chiefandhistory:
+            chiefandhistory_text = PyQuery(chiefandhistory[0])
+            if chiefandhistory_text.text():
+                # clean the chief and history compliant text, get rid of \n,:,：
+                p1 = r'\n|:|：| |\t'
+                chiefandhistory_clean = regex.sub(p1, '', str(chiefandhistory_text.text()))
+                # print(chiefandhistory_clean)
+                if chiefandhistory_clean:
 
-                # 拉取主诉
-                chief = regex.findall(r'(?<=主诉).*?(?=现病史)',chiefandhistory_clean)
-                # print(chief[0])
-                if chief:
-                    text.append(chief[0])
+                    # 拉取主诉
+                    chief = regex.search(r'(?<=(主诉)|(主 诉)|(主[\t]*诉)).*?(?=现病史)', chiefandhistory_clean)
+                    # print(chief)
+                    if chief:
+                        text.append(chief[0])
+                    else:
+                        text.append('*')
+
+                    # 拉取现病史
+                    hpi = regex.findall(r'(?<=现病史).*?(?=既往史)', chiefandhistory_clean)
+                    if hpi:
+                        text.append(hpi[0])
+                    else:
+                        text.append('*')
+
+                    # 拉取既往史
+                    item = regex.findall(r'(?<=既往史).*?(?=个人史)', chiefandhistory_clean)
+                    if item:
+                        text.append(item[0])
+                    else:
+                        text.append('*')
+
+                    # 拉取个人史
+                    item = regex.search(r'(?<=个人史).*?(?=(婚育及月经史)|(婚育史)|(婚育史)|(生育史)|(生育史)|(月经及婚育史)|(月经史及婚育史))',
+                                        chiefandhistory_clean)
+                    if item:
+                        text.append(item[0])
+                    else:
+                        text.append('*')
+
+                    # 拉取月经和婚育
+                    item = regex.search(r'(?<=(婚育及月经史)|(婚育史)|(生育史)|(月经及婚育史)|(月经史及婚育史)).*?(?=家族史)',
+                                        chiefandhistory_clean)
+                    if item:
+                        text.append(item[0])
+                    else:
+                        text.append('*')
+
+                    # 拉取家族史
+                    item = regex.findall(r'(?<=家族史).*', chiefandhistory_clean)
+                    if item:
+                        text.append(item[0])
+                    else:
+                        text.append('*')
                 else:
-                    text.append('Null')
+                    text.append('null')
+        else:
+            text.append('null')
+            text.append('null')
+            text.append('null')
+            text.append('null')
+            text.append('null')
+            text.append('null')
+            text.append('null')
+            text.append('null')
+    except:
+        print( '去除 xml error HIS id is '+ text[1])
 
-                # 拉取现病史
-                hpi = regex.findall(r'(?<=现病史).*?(?=既往史)',chiefandhistory_clean)
-                if hpi:
-                    text.append(hpi[0])
-                else:
-                    text.append('Null')
-
-                # 拉取既往史
-                item = regex.findall(r'(?<=既往史).*?(?=个人史)',chiefandhistory_clean)
-                if item:
-                    text.append(item[0])
-                else:
-                    text.append('Null')
-
-                # 拉取个人史
-                item = regex.findall(r'(?<=个人史).*?(?=月经)',chiefandhistory_clean)
-                if item:
-                    text.append(item[0])
-                else:
-                    text.append('Null')
-
-                # 拉取月经和婚育
-                item = regex.findall(r'(?<=婚育史).*',chiefandhistory_clean)
-                if item:
-                    text.append(item[0])
-                else:
-                    text.append('Null')
-
-            else:
-                text.append('Null')
-    else:
-        text.append('Null')
-
+    htmlfile.close()
     return text

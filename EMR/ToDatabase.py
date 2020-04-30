@@ -8,17 +8,17 @@
 import pymysql
 from variables import workstation_host, workstation_passwd, workstation_user,workstation_port
 
-def insert_database(index, list):
-    connection = pymysql.connect(host=workstation_host,
-                                 port=workstation_port,
+connection = pymysql.connect(host=workstation_host,
+                                 port=3306,
                                  user='root',
                                  password=workstation_passwd,
-                                 db='xyl',
+                                 db='wjf',
                                  charset='utf8')
+
+def insert_database(index, list):
     # effect_row = cursor.execute('INSERT INTO `users` (`name`, `age`) VALUES (%s, %s)', ('mary', 18))
     cursor = connection.cursor()
-    effect_row = cursor.execute('INSERT INTO `medical_EHR` (`HIS`, `Chief_complaint`) VALUES (%s, %s)', (list[1],list[2]))
+    effect_row1 = cursor.execute('INSERT INTO `medical_EHR` (`id`,`BAH`,`HIS`,`Chief_complaint`,`xianbingshi`,`jiwangshi`,`gerenshi`,`hunyushi`,`jiazushi`) VALUES (%s ,%s, %s, %s, %s, %s, %s, %s, %s)',(str(index),list[0],list[1],list[2],list[3],list[4],list[5],list[6],list[7]))
+    #effect_row2 = cursor.execute('INSERT INTO `medical_EHR` (`id`,`BAH`,`HIS`,`Chief_complaint`) VALUES ( %s, %s, %s, %s)', (str(index),list[0],list[1],list[2]))
+    #effect_row3 = cursor.execute('INSERT INTO `medical_EHR` (`gerenshi`,`hunyushi`) VALUES (%s, %s)', (list[5],list[6]))
     connection.commit()
-    return effect_row
-
-insert_database([],['123','1234','主诉'])

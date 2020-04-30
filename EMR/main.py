@@ -15,29 +15,40 @@ import pymysql
 from traverse import gethtml, getxml
 from xmltohtml import xmltohtml
 from extract_text import extract_text
-from ToDatabase import insert_database
+from ToDatabase import *
+from tqdm import tqdm
 # import csv
 # import numpy as np
 # import pandas as ps
 
 # xml files dir
-input_dir = "./Data1"
+input_dir = "C:\\Users\\13438\\PycharmProjects\\data\\extradata\\Data1"
 # desitination html path dir
-destination_dir = "./Data2"
-index = []
+destination_dir = "C:\\Users\\13438\\PycharmProjects\\data\\extradata\\Data2"
+index = 0
 
 file_xml = getxml(input_dir)
 
-
-for line in file_xml:
-    xmltohtml(line,destination_dir)
+# for line in file_xml:
+#     xmltohtml(line,destination_dir)
 
 file_html = gethtml(destination_dir)
-for file in file_html:
-    
+
+i = 0
+for file in tqdm(file_html):
     item_list = extract_text(file)
-    print(item_list)
-    insert_database(index, item_list)
+    index = index + 1
+
+    #insert_database(index, item_list)
+
+    try:
+        insert_database(index, item_list)
+    except:
+        i = i + 1
+        print('insert error : HIS id is ' + item_list[1])
+
+print('error num : ' + str(i))
+connection.close()
     
     # with open('result.output','a+',encoding='utf-8') as f:
     #     output = extract_text(file)
