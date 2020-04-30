@@ -1,7 +1,7 @@
 '''
 @Author: zjk
 @Date: 2020-04-26 11:55:39
-@LastEditTime: 2020-04-27 10:35:21
+@LastEditTime: 2020-04-30 16:12:21
 @LastEditors: zjk
 @Description: 抽取主诉、病史、病案号等
 '''
@@ -27,13 +27,41 @@ def extract_text(file):
     # print(result)
 
     # 病案号
-    his_record_number = r'<病案号.*?>.*?</病案号>'  ## .*?贪婪匹配，匹配到>
+    his_record_number = r'<病案号.*?>.*?</病案号>'  
     his_record_number_temp = regex.findall(his_record_number, myhtml)
     if his_record_number_temp:
         modified_number = r'\d{6}(?=</病案号>)'
         text.append(regex.findall(modified_number, his_record_number_temp[0])[0])
     else:
         text.append('null')
+
+    # 就诊号
+    his_record_number = r'<就诊号.*?>.*?</就诊号>'  
+    his_record_number_temp = regex.findall(his_record_number, myhtml)
+    if his_record_number_temp:
+        modified_number = r'(?<=>).*?(?=</就诊号>)'
+        text.append(regex.findall(modified_number, his_record_number_temp[0])[0])
+    else:
+        text.append('null')
+    
+    # 住院号
+    his_record_number = r'<住院号.*?>.*?</住院号>'  
+    his_record_number_temp = regex.findall(his_record_number, myhtml)
+    if his_record_number_temp:
+        modified_number = r'(?<=>).*?(?=</住院号>)'
+        text.append(regex.findall(modified_number, his_record_number_temp[0])[0])
+    else:
+        text.append('null')
+
+     # 病历号
+    his_record_number = r'(?<=病历号:)\d{6}'  
+    his_record_number_temp = regex.findall(his_record_number, myhtml)
+    if his_record_number_temp:
+        text.append(his_record_number_temp[0])
+    else:
+        text.append('null')
+    
+
 
 
     # HIS内部标识

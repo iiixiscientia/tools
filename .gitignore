@@ -1,1 +1,7 @@
 *.html
+*.xml
+variables.py
+.vscode
+*.txt
+*.pyc
+EMR/variables.py
