@@ -26,9 +26,8 @@ def xmltohtml(inputpath, outputpath):
     xmlfile2 = regex.sub('&lt;','<', xmlfile1)
     xmlfile3 = regex.sub('&nbsp;','',xmlfile2)
     xmltext = regex.sub('&gt;','>', xmlfile3)
-
+    # 截取html（直接正则）
     p1 = r'<HTML>.*?</HTML>'
-
     result = regex.search(p1, xmltext)
     if result:
         newtext = result[0]
@@ -36,7 +35,7 @@ def xmltohtml(inputpath, outputpath):
         newtext = "Null"
     # newtext = etree.HTML(newtext, parser=etree.HTMLParser(encoding='utf-8'))
     # newtext = etree.tostring(newtext)
-    # save as html
+    # save as html，保存为html
     html_path = os.path.join(outputpath,line2)
     with open(html_path+".html",'w',encoding='UTF-8-sig') as f:
         f.write(newtext)
