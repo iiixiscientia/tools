@@ -18,7 +18,7 @@
 
 [config](config) 一些自用配置的备份
 
-[arch](arch) 自用的Archlinux相关配置和包等)
+[arch](arch) 自用的Archlinux相关配置和包等(以及自己写的navicat和photoshop等破解安装脚本，部分脚本由于各种和谐社会原因已经移除（DMCA警告.webp）) 
 
 [服务器配置](Server) 灵车漂移的野生网管
 
